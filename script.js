@@ -1,11 +1,10 @@
 // Ollama Server Configuration
 const OLLAMA_BASE_URL = 'https://f2ki-h100-1.f2.htw-berlin.de:11435';
+const FIXED_MODEL = 'llama3.1:8b';
 
 // DOM Elements
 const chatHistoryElement = document.getElementById('chatHistory');
 const userInput = document.getElementById('userInput');
-const modelSelect = document.getElementById('modelSelect');
-const modelsList = document.getElementById('modelsList');
 const statusMessage = document.getElementById('statusMessage');
 const loadingSpinner = document.getElementById('loadingSpinner');
 
@@ -13,13 +12,11 @@ const loadingSpinner = document.getElementById('loadingSpinner');
 const sendChatBtn = document.getElementById('sendChat');
 const sendGenerateBtn = document.getElementById('sendGenerate');
 const clearChatBtn = document.getElementById('clearChat');
-const listModelsBtn = document.getElementById('listModels');
 const saveChatBtn = document.getElementById('saveChat');
 const loadChatBtn = document.getElementById('loadChat');
 const fileInput = document.getElementById('fileInput');
 
 // State
-let availableModels = [];
 let isLoading = false;
 let chatHistory = [];
 let currentSessionId = null;
@@ -35,20 +32,10 @@ document.addEventListener('DOMContentLoaded', function() {
     kiOracle = new KIOracle();
     
     setupEventListeners();
-    loadModels();
     loadChatFromStorage();
     currentSessionId = storageManager.generateSessionId();
     
-    // Auto-select llama3.1:8b model for oracle
-    setTimeout(() => {
-        const llama31Option = Array.from(document.getElementById('modelSelect').options).find(
-            option => option.value.includes('llama3.1:8b')
-        );
-        if (llama31Option) {
-            document.getElementById('modelSelect').value = llama31Option.value;
-        }
-    }, 1000);
-      // Setup auto-save toggle
+    // Setup auto-save toggle
     const autoSaveToggle = document.getElementById('autoSaveToggle');
     autoSaveToggle.addEventListener('change', function() {
         storageManager.setAutoSaveEnabled(this.checked);
@@ -60,7 +47,6 @@ function setupEventListeners() {
     sendChatBtn.addEventListener('click', () => sendMessage('chat'));
     sendGenerateBtn.addEventListener('click', () => sendMessage('generate'));
     clearChatBtn.addEventListener('click', clearChat);
-    listModelsBtn.addEventListener('click', loadModels);
     saveChatBtn.addEventListener('click', exportChat);
     loadChatBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', importChat);
@@ -146,80 +132,6 @@ function addMessage(content, sender = 'user') {
     }
 }
 
-async function loadModels() {
-    try {
-        setLoading(true);
-        updateStatus('Lade verfügbare Modelle...');
-        
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        availableModels = data.models || [];
-        
-        displayModels();
-        populateModelSelect();
-        updateStatus(`${availableModels.length} Modelle geladen`);
-        
-    } catch (error) {
-        console.error('Fehler beim Laden der Modelle:', error);
-        updateStatus('Fehler beim Laden der Modelle');
-        modelsList.innerHTML = '<span class="loading-text">Fehler beim Laden der Modelle. Überprüfen Sie die Serververbindung.</span>';
-    } finally {
-        setLoading(false);
-    }
-}
-
-function displayModels() {
-    if (availableModels.length === 0) {
-        modelsList.innerHTML = '<span class="loading-text">Keine Modelle gefunden</span>';
-        return;
-    }
-    
-    modelsList.innerHTML = '';
-    availableModels.forEach(model => {
-        const modelTag = document.createElement('span');
-        modelTag.className = 'model-tag';
-        modelTag.textContent = model.name;
-        modelTag.title = `Größe: ${formatSize(model.size)} | Geändert: ${new Date(model.modified_at).toLocaleString()}`;
-        
-        modelTag.addEventListener('click', () => {
-            modelSelect.value = model.name;
-            // Visual feedback
-            document.querySelectorAll('.model-tag').forEach(tag => tag.classList.remove('selected'));
-            modelTag.classList.add('selected');
-        });
-        
-        modelsList.appendChild(modelTag);
-    });
-}
-
-function populateModelSelect() {
-    modelSelect.innerHTML = '<option value="">Modell auswählen...</option>';
-    availableModels.forEach(model => {
-        const option = document.createElement('option');
-        option.value = model.name;
-        option.textContent = model.name;
-        modelSelect.appendChild(option);
-    });
-}
-
-function formatSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
 async function sendMessage(type = 'chat') {
     const message = userInput.value.trim();
     
@@ -235,15 +147,8 @@ async function sendMessage(type = 'chat') {
         return;
     }
     
-    const selectedModel = modelSelect.value;
-    
     if (!message) {
         updateStatus('Bitte geben Sie eine Nachricht ein');
-        return;
-    }
-    
-    if (!selectedModel) {
-        updateStatus('Bitte wählen Sie ein Modell aus');
         return;
     }
     
@@ -253,13 +158,13 @@ async function sendMessage(type = 'chat') {
     
     try {
         setLoading(true);
-        updateStatus(`Sende Anfrage an ${selectedModel}...`);
+        updateStatus(`Sende Anfrage an ${FIXED_MODEL}...`);
         
         let response;
         if (type === 'chat') {
-            response = await sendChatRequest(message, selectedModel);
+            response = await sendChatRequest(message, FIXED_MODEL);
         } else {
-            response = await sendGenerateRequest(message, selectedModel);
+            response = await sendGenerateRequest(message, FIXED_MODEL);
         }
         
         updateStatus('Antwort erhalten');

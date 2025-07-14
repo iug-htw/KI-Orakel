@@ -11,7 +11,6 @@
             <h1>🔮 KI-Orakel für Karriereberatung 🔮</h1>
             <div class="server-info">
                 <span>Powered by Ollama (llama3.1:8b)</span>
-                <button id="listModels" class="btn-secondary">Modelle laden</button>
             </div>
         </header>
 
@@ -27,16 +26,7 @@
                 </div>
                 <span id="progressText">0 von 17 Fragen</span>
             </div>
-        </div>
-
-        <div class="models-section">
-            <h3>Verfügbare Modelle:</h3>
-            <div id="modelsList" class="models-list">
-                <span class="loading-text">Klicken Sie auf "Modelle laden" um verfügbare Modelle anzuzeigen</span>
-            </div>
-        </div>
-
-        <div class="settings-section">
+        </div>        <div class="settings-section">
             <h3>Einstellungen:</h3>
             <div class="setting-item">
                 <label>
@@ -49,14 +39,7 @@
 
         <div class="chat-container">
             <div id="chatHistory" class="chat-history"></div>
-            
-            <div class="input-section">
-                <div class="model-selection">
-                    <select id="modelSelect">
-                        <option value="">Modell auswählen...</option>
-                    </select>
-                </div>
-                
+              <div class="input-section">
                 <div class="input-group">                    <textarea id="userInput" placeholder="Geben Sie Ihre Antwort hier ein..." rows="3"></textarea>
                     <div class="button-group">
                         <button id="sendChat" class="btn-primary">Antwort senden</button>
