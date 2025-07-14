@@ -5,36 +5,32 @@
 
 class KIOracle {
     constructor() {
-        this.allQuestions = [
-            {
+        this.allQuestions = [            {
                 id: 1,
                 text: "Wie gefällt Dir der Informatikunterricht?",
-                type: "rating",
-                options: ["Sehr gut", "Gut", "Mittelmäßig", "Nicht so gut", "Gar nicht"]
+                type: "text",
+                placeholder: "Beschreibe, wie Dir der Informatikunterricht gefällt und warum..."
             },
             {
                 id: 2,
                 text: "Was gefällt Dir am meisten im Informatikunterricht?",
                 type: "text",
                 placeholder: "Beschreibe, was Dir besonders Spaß macht..."
-            },
-            {
+            },            {
                 id: 3,
                 text: "Programmierst Du gern?",
-                type: "rating",
-                options: ["Sehr gern", "Gern", "Geht so", "Nicht besonders", "Überhaupt nicht"]
-            },
-            {
+                type: "text",
+                placeholder: "Erzähle, wie gern Du programmierst und warum..."
+            },            {
                 id: 4,
                 text: "Programmierst Du gern in Gruppen?",
-                type: "rating",
-                options: ["Sehr gern", "Gern", "Geht so", "Lieber allein", "Gar nicht gern"]
-            },
-            {
+                type: "text",
+                placeholder: "Beschreibe Deine Erfahrungen mit Programmieren in Gruppen..."
+            },            {
                 id: 5,
                 text: "Ist Programmieren für Dich eine kreative Tätigkeit?",
-                type: "rating",
-                options: ["Sehr kreativ", "Kreativ", "Teilweise", "Wenig kreativ", "Nicht kreativ"]
+                type: "text",
+                placeholder: "Erkläre, inwiefern Programmieren für Dich kreativ ist..."
             },
             {
                 id: 6,
@@ -47,12 +43,11 @@ class KIOracle {
                 text: "Was waren Deine Erwartungen an den Informatikunterricht?",
                 type: "text",
                 placeholder: "Beschreibe Deine Erwartungen..."
-            },
-            {
+            },            {
                 id: 8,
                 text: "Inwiefern wurden Deine Erwartungen erfüllt?",
-                type: "rating",
-                options: ["Voll erfüllt", "Größtenteils erfüllt", "Teilweise erfüllt", "Wenig erfüllt", "Nicht erfüllt"]
+                type: "text",
+                placeholder: "Beschreibe, ob und wie Deine Erwartungen erfüllt wurden..."
             },
             {
                 id: 9,
@@ -71,30 +66,22 @@ class KIOracle {
                 text: "Welche Beispiele verwendet ihr im Informatikunterricht?",
                 type: "text",
                 placeholder: "Erzähle von konkreten Beispielen und Projekten..."
-            },
-            {
+            },            {
                 id: 12,
                 text: "Wie gefallen Dir Gruppenarbeiten in Informatik?",
-                type: "rating",
-                options: ["Sehr gut", "Gut", "Geht so", "Nicht so gut", "Gar nicht"]
-            },
-            {
-                id: 13,
-                text: "Wer waren die Personen in Deiner Gruppe?",
                 type: "text",
-                placeholder: "Beschreibe Deine Gruppenmitglieder..."
+                placeholder: "Erzähle von Deinen Erfahrungen mit Gruppenarbeiten in Informatik..."
             },
             {
                 id: 14,
                 text: "Gab es Unterschiede zwischen Jungs und Mädchen in der Zusammenarbeit?",
                 type: "text",
                 placeholder: "Teile Deine Beobachtungen..."
-            },
-            {
+            },            {
                 id: 15,
                 text: "Wie war die Zusammenarbeit mit den Jungs?",
-                type: "rating",
-                options: ["Sehr gut", "Gut", "Geht so", "Schwierig", "Sehr schwierig"]
+                type: "text",
+                placeholder: "Beschreibe Deine Erfahrungen bei der Zusammenarbeit mit den Jungs..."
             },
             {
                 id: 16,
@@ -141,9 +128,7 @@ Ich bin das mystische KI-Orakel und werde Dir dabei helfen, Deine Zukunft in der
 **Bist Du bereit, Deine technische Zukunft zu entdecken?**
 
 Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
-    }
-
-    getCurrentQuestion() {
+    }    getCurrentQuestion() {
         if (this.currentQuestionIndex >= this.questions.length) {
             return this.generatePrediction();
         }
@@ -151,35 +136,19 @@ Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
         const question = this.questions[this.currentQuestionIndex];
         let questionText = `**Frage ${this.currentQuestionIndex + 1} von ${this.questions.length}:**\n\n`;
         questionText += `${question.text}\n\n`;
-        
-        if (question.type === "rating") {
-            questionText += "Wähle eine der folgenden Optionen:\n";
-            question.options.forEach((option, index) => {
-                questionText += `${index + 1}. ${option}\n`;
-            });
-            questionText += "\nGib die Nummer Deiner Wahl ein (1-" + question.options.length + ")";
-        } else {
-            questionText += question.placeholder;
-        }
+        questionText += question.placeholder;
         
         return questionText;
-    }
-
-    processAnswer(answer) {        if (!this.isOracleMode || this._isCompleted) {
+    }processAnswer(answer) {        if (!this.isOracleMode || this._isCompleted) {
             return "Das Orakel ist nicht aktiv. Starte mit 'Orakel starten'!";
         }
 
         const question = this.questions[this.currentQuestionIndex];
         let processedAnswer = answer.trim();
 
-        // Validate rating answers
-        if (question.type === "rating") {
-            const choice = parseInt(answer);
-            if (choice >= 1 && choice <= question.options.length) {
-                processedAnswer = question.options[choice - 1];
-            } else {
-                return `Bitte wähle eine gültige Option (1-${question.options.length})`;
-            }
+        // Check if answer is not empty
+        if (!processedAnswer) {
+            return "Bitte gib eine Antwort ein.";
         }
 
         // Store answer
@@ -203,102 +172,153 @@ Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
         const prediction = this.createOptimisticPrediction();
         this.isOracleMode = false;
         return prediction;
-    }
-
-    createOptimisticPrediction() {
+    }    createOptimisticPrediction() {
         let prediction = `🌟 **DEINE MAGISCHE KARRIEREPROGNOSE** 🌟\n\n`;
         prediction += `Das KI-Orakel hat gesprochen und Deine Zukunft in der Techindustrie vorausgesagt!\n\n`;
 
         // Analyze answers for personalized prediction
-        const positiveAnswers = Object.values(this.answers).filter(a => 
-            a.type === "rating" && (a.answer.includes("Sehr") || a.answer.includes("Gern"))
-        ).length;
-
-        const creativityAnswer = this.answers[5]?.answer || "";
-        const motivationAnswer = this.answers[6]?.answer || "";
-        const expectationsAnswer = this.answers[8]?.answer || "";
-
-        // Generate personalized career path
-        let careerPath = this.determineCareerPath(positiveAnswers, creativityAnswer, motivationAnswer);
+        const answers = Object.values(this.answers);
+        
+        // Generate personalized career path based on actual answers
+        let careerPath = this.determineCareerPathFromAnswers(answers);
         
         prediction += `🎯 **DEIN OPTIMALER KARRIEREWEG:**\n`;
         prediction += `${careerPath}\n\n`;
 
         prediction += `💫 **DEINE BESONDEREN STÄRKEN:**\n`;
-        prediction += this.generateStrengths() + "\n\n";
+        prediction += this.generateStrengthsFromAnswers(answers) + "\n\n";
 
         prediction += `🚀 **DEINE ZUKUNFTSAUSSICHTEN:**\n`;
-        prediction += this.generateFuturePrediction() + "\n\n";
+        prediction += this.generateFuturePredictionFromAnswers(answers) + "\n\n";
 
         prediction += `💡 **EMPFOHLENE NÄCHSTE SCHRITTE:**\n`;
-        prediction += this.generateRecommendations() + "\n\n";
+        prediction += this.generateRecommendationsFromAnswers(answers) + "\n\n";
 
         prediction += `🌈 **ABSCHLIESSENDE WEISHEIT:**\n`;
         prediction += `Die Sterne stehen günstig für Dich! Du hast das Zeug zu einer erfolgreichen Karriere in der Techindustrie. Vertraue auf Deine Fähigkeiten und wage große Schritte - die Zukunft gehört Dir! ✨`;
 
         return prediction;
-    }
-
-    determineCareerPath(positiveAnswers, creativity, motivation) {
-        const paths = [
-            "**Software-Entwicklerin** - Du wirst innovative Apps und Systeme erschaffen, die das Leben von Millionen Menschen verbessern!",
-            "**UX/UI-Designerin** - Deine kreative Ader wird in der Gestaltung benutzerfreundlicher Interfaces zum Tragen kommen!",
-            "**Data Scientists** - Du wirst mit Big Data arbeiten und bahnbrechende Erkenntnisse gewinnen!",
-            "**Cybersecurity-Expertin** - Du wirst als digitale Heldin Unternehmen vor Cyberangriffen schützen!",
-            "**KI-Entwicklerin** - Du wirst an der Spitze der technologischen Revolution stehen!",
-            "**Tech-Unternehmerin** - Du wirst Dein eigenes Startup gründen und die Welt verändern!",
-            "**Projektmanagerin** - Du wirst große Tech-Projekte leiten und Teams zum Erfolg führen!",
-            "**DevOps-Engineerin** - Du wirst die Brücke zwischen Entwicklung und Betrieb sein!"
-        ];
-
-        const index = Math.min(positiveAnswers, paths.length - 1);
-        return paths[index];
-    }
-
-    generateStrengths() {
-        const strengths = [
+    }    determineCareerPathFromAnswers(answers) {
+        // Analyze answers for career path determination
+        const allAnswers = answers.map(a => a.answer.toLowerCase()).join(' ');
+        
+        // Keywords for different career paths
+        const keywordMap = {
+            software: ['programmier', 'code', 'entwickl', 'app', 'software', 'algorithmus'],
+            data: ['daten', 'analyse', 'statistik', 'big data', 'machine learning'],
+            ui: ['design', 'kreativ', 'benutzer', 'interface', 'user experience'],
+            security: ['sicher', 'schutz', 'hack', 'verschlüssel', 'firewall'],
+            management: ['projekt', 'team', 'leitung', 'organisation', 'gruppe'],
+            research: ['forsch', 'wissenschaft', 'innovation', 'experiment']
+        };
+        
+        let maxScore = 0;
+        let bestPath = 'software';
+        
+        Object.entries(keywordMap).forEach(([path, keywords]) => {
+            const score = keywords.reduce((sum, keyword) => {
+                return sum + (allAnswers.includes(keyword) ? 1 : 0);
+            }, 0);
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestPath = path;
+            }
+        });
+        
+        const paths = {
+            software: "**Software-Entwicklerin** - Du wirst innovative Apps und Systeme erschaffen, die das Leben von Millionen Menschen verbessern!",
+            data: "**Data Scientists** - Du wirst mit Big Data arbeiten und bahnbrechende Erkenntnisse gewinnen!",
+            ui: "**UX/UI-Designerin** - Deine kreative Ader wird in der Gestaltung benutzerfreundlicher Interfaces zum Tragen kommen!",
+            security: "**Cybersecurity-Expertin** - Du wirst als digitale Heldin Unternehmen vor Cyberangriffen schützen!",
+            management: "**Projektmanagerin** - Du wirst große Tech-Projekte leiten und Teams zum Erfolg führen!",
+            research: "**KI-Entwicklerin** - Du wirst an der Spitze der technologischen Revolution stehen!"
+        };
+        
+        return paths[bestPath];
+    }    generateStrengthsFromAnswers(answers) {
+        const strengths = [];
+        const allAnswers = answers.map(a => a.answer.toLowerCase()).join(' ');
+        
+        // Analyze answers for strengths
+        if (allAnswers.includes('kreativ') || allAnswers.includes('design')) {
+            strengths.push("🎨 Kreative Herangehensweise an technische Herausforderungen");
+        }
+        if (allAnswers.includes('gruppe') || allAnswers.includes('team') || allAnswers.includes('zusammen')) {
+            strengths.push("🤝 Hervorragende Teamarbeit-Fähigkeiten");
+        }
+        if (allAnswers.includes('herausfordernd') || allAnswers.includes('problem') || allAnswers.includes('lösung')) {
+            strengths.push("💪 Starke Problemlösungsfähigkeiten");
+        }
+        if (allAnswers.includes('analyse') || allAnswers.includes('struktur') || allAnswers.includes('logik')) {
+            strengths.push("🔥 Ausgeprägtes analytisches Denkvermögen");
+        }
+        
+        // Always include at least 4 strengths
+        const defaultStrengths = [
             "🔥 Ausgeprägtes analytisches Denkvermögen",
             "💪 Starke Problemlösungsfähigkeiten",
             "🎨 Kreative Herangehensweise an technische Herausforderungen",
             "🤝 Hervorragende Teamarbeit-Fähigkeiten",
             "🧠 Schnelle Auffassungsgabe für neue Technologien",
-            "🎯 Zielorientierte Arbeitsweise",
-            "🌟 Natürliche Führungsqualitäten",
-            "🔧 Praktische Umsetzungsstärke"
+            "🎯 Zielorientierte Arbeitsweise"
         ];
-
+        
+        // Fill up to 4 strengths
+        while (strengths.length < 4) {
+            const randomStrength = defaultStrengths[Math.floor(Math.random() * defaultStrengths.length)];
+            if (!strengths.includes(randomStrength)) {
+                strengths.push(randomStrength);
+            }
+        }
+        
         return strengths.slice(0, 4).join("\n");
-    }
-
-    generateFuturePrediction() {
+    }    generateFuturePredictionFromAnswers(answers) {
         const predictions = [
             "📈 In 5 Jahren wirst Du in einem führenden Tech-Unternehmen arbeiten",
             "🏆 Du wirst für Deine innovativen Projekte Anerkennung erhalten",
             "💰 Dein Gehalt wird überdurchschnittlich sein",
             "🌍 Du wirst an Projekten mit globaler Reichweite arbeiten",
             "👥 Du wirst ein Team von talentierten Entwicklern leiten",
-            "📚 Du wirst regelmäßig auf Konferenzen als Expertin sprechen",
-            "🔬 Du wirst zu technologischen Durchbrüchen beitragen",
-            "🎖️ Du wirst als Vorbild für andere Frauen in der Tech-Branche dienen"
+            "🔬 Du wirst zu technologischen Durchbrüchen beitragen"
         ];
-
+        
         return predictions.slice(0, 3).join("\n");
-    }
-
-    generateRecommendations() {
-        const recommendations = [
-            "🎓 Vertiefe Dein Wissen in Deinen Lieblings-Programmiersprachen",
+    }    generateRecommendationsFromAnswers(answers) {
+        const allAnswers = answers.map(a => a.answer.toLowerCase()).join(' ');
+        const recommendations = [];
+        
+        // Personalized recommendations based on answers
+        if (allAnswers.includes('programmier') || allAnswers.includes('code')) {
+            recommendations.push("🎓 Vertiefe Dein Wissen in Deinen Lieblings-Programmiersprachen");
+        }
+        if (allAnswers.includes('projekt') || allAnswers.includes('team')) {
+            recommendations.push("🏢 Sammle Praxiserfahrung durch Praktika oder Team-Projekte");
+        }
+        if (allAnswers.includes('kreativ') || allAnswers.includes('design')) {
+            recommendations.push("🎨 Arbeite an kreativen Projekten und erstelle ein Portfolio");
+        }
+        
+        // Always include these
+        const defaultRecommendations = [
             "🔗 Baue ein starkes professionelles Netzwerk auf",
-            "📱 Arbeite an eigenen Projekten und erstelle ein Portfolio",
             "📖 Bleibe immer auf dem neuesten Stand der Technologie",
-            "👥 Suche Dir eine Mentorin in der Tech-Branche",
-            "🏢 Sammle Praxiserfahrung durch Praktika oder Nebenjobs",
             "💡 Nimm an Hackathons und Coding-Wettbewerben teil",
             "🌐 Engagiere Dich in Open-Source-Projekten"
         ];
-
+        
+        // Fill up to 4 recommendations
+        while (recommendations.length < 4) {
+            const randomRec = defaultRecommendations[Math.floor(Math.random() * defaultRecommendations.length)];
+            if (!recommendations.includes(randomRec)) {
+                recommendations.push(randomRec);
+            }
+        }
+        
         return recommendations.slice(0, 4).join("\n");
-    }    isInOracleMode() {
+    }
+
+    isInOracleMode() {
         return this.isOracleMode;
     }
 

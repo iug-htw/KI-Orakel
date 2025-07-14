@@ -305,6 +305,14 @@ function loadChatFromStorage() {
 
 // Oracle-specific functions
 function startOracleSession() {
+    // Clear chat and start fresh session
+    document.getElementById('chatHistory').innerHTML = '';
+    chatHistory = [];
+    currentSessionId = storageManager.generateSessionId();
+    
+    // Reset oracle
+    kiOracle.resetOracle();
+    
     const welcomeMessage = kiOracle.startOracle();
     addMessage(welcomeMessage, 'oracle');
     
@@ -339,12 +347,11 @@ function handleOracleResponse(answer) {
     // Add user's answer
     addMessage(answer, 'user');
     userInput.value = '';
-    
-    // Process the answer
+      // Process the answer
     const response = kiOracle.processAnswer(answer);
     
     // Check if it's a validation error
-    if (response.includes('Bitte wähle eine gültige Option')) {
+    if (response.includes('Bitte gib eine Antwort ein')) {
         addMessage(response, 'system');
         return;
     }
