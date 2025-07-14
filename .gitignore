@@ -48,4 +48,10 @@ temp/
 .env.local
 .env.development.local
 .env.test.local
-.env.production.local
+
+# Chat-Exports (optional - entfernen Sie diese Zeile wenn Sie Exports committen möchten)
+# ollama_chat_*.json
+# ollama_chat_*.txt
+
+# User-specific files
+*.user

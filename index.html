@@ -23,6 +23,17 @@
             </div>
         </div>
 
+        <div class="settings-section">
+            <h3>Einstellungen:</h3>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="autoSaveToggle" checked>
+                    Automatische Speicherung aktiviert
+                </label>
+                <span class="setting-description">Chats werden automatisch im Download-Ordner gespeichert</span>
+            </div>
+        </div>
+
         <div class="chat-container">
             <div id="chatHistory" class="chat-history"></div>
             
@@ -39,7 +50,10 @@
                         <button id="sendChat" class="btn-primary">Chat senden</button>
                         <button id="sendGenerate" class="btn-primary">Text vervollständigen</button>
                         <button id="clearChat" class="btn-secondary">Chat leeren</button>
+                        <button id="saveChat" class="btn-secondary">Chat speichern</button>
+                        <button id="loadChat" class="btn-secondary">Chat laden</button>
                     </div>
+                    <input type="file" id="fileInput" accept=".json,.txt" style="display: none;">
                 </div>
             </div>
         </div>
