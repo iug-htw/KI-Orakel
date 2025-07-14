@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Chat Interface</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ollama Chat Interface</h1>
+            <div class="server-info">
+                <span>Server: https://f2ki-h100-1.f2.htw-berlin.de:11435</span>
+                <button id="listModels" class="btn-secondary">Modelle laden</button>
+            </div>
+        </header>
+
+        <div class="models-section">
+            <h3>Verfügbare Modelle:</h3>
+            <div id="modelsList" class="models-list">
+                <span class="loading-text">Klicken Sie auf "Modelle laden" um verfügbare Modelle anzuzeigen</span>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div id="chatHistory" class="chat-history"></div>
+            
+            <div class="input-section">
+                <div class="model-selection">
+                    <select id="modelSelect">
+                        <option value="">Modell auswählen...</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <textarea id="userInput" placeholder="Geben Sie Ihre Frage hier ein..." rows="3"></textarea>
+                    <div class="button-group">
+                        <button id="sendChat" class="btn-primary">Chat senden</button>
+                        <button id="sendGenerate" class="btn-primary">Text vervollständigen</button>
+                        <button id="clearChat" class="btn-secondary">Chat leeren</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div id="statusMessage" class="status-message">Bereit</div>
+            <div class="spinner" id="loadingSpinner"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
