@@ -44,8 +44,10 @@ Standard-Server: `https://f2ki-h100-1.f2.htw-berlin.de:11435`
 
 - `index.html` - Hauptseite mit Chat-Interface
 - `style.css` - Styling und responsive Design
-- `script.js` - JavaScript für API-Kommunikation
+- `script.js` - Haupt-JavaScript für UI und API-Kommunikation
+- `chatStorage.js` - Storage-Manager für Chat-Speicherung
 - `README.md` - Diese Dokumentation
+- `chats/` - Ordner für Chat-Dateien
 
 ### Funktionalitäten
 
@@ -113,3 +115,18 @@ Falls CORS-Probleme auftreten, stellen Sie sicher, dass der Ollama-Server entspr
 ## Lizenz
 
 MIT License - Freie Verwendung für persönliche und kommerzielle Zwecke.
+
+### Code-Architektur
+
+- **Modularer Aufbau**: Storage-Funktionalität in separater Datei
+- **ChatStorageManager**: Eigenständige Klasse für alle Speicheroperationen
+- **Callback-System**: Flexible Kommunikation zwischen Modulen
+- **Error Handling**: Umfassende Fehlerbehandlung in allen Modulen
+
+### ChatStorageManager Features
+
+- **localStorage Integration**: Automatische Browser-Speicherung
+- **Auto-Save**: Intelligente Datei-Speicherung
+- **Export/Import**: JSON und TXT Unterstützung
+- **Session Management**: Eindeutige Session-IDs
+- **Callback Support**: Flexible UI-Updates
