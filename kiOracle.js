@@ -5,7 +5,7 @@
 
 class KIOracle {
     constructor() {
-        this.questions = [
+        this.allQuestions = [
             {
                 id: 1,
                 text: "Wie gefällt Dir der Informatikunterricht?",
@@ -109,18 +109,23 @@ class KIOracle {
                 placeholder: "Beschreibe Deine Vorstellungen vom Beruf..."
             }
         ];
-        
+          this.questions = []; // Will be filled with 5 random questions
         this.currentQuestionIndex = 0;
         this.answers = {};
         this.isOracleMode = false;
-        this.isCompleted = false;
+        this._isCompleted = false;
+        this.maxQuestions = 5;
     }
 
-    startOracle() {
-        this.isOracleMode = true;
+    selectRandomQuestions() {
+        // Shuffle array and take first 5 questions
+        const shuffled = [...this.allQuestions].sort(() => 0.5 - Math.random());
+        this.questions = shuffled.slice(0, this.maxQuestions);
+    }    startOracle() {        this.isOracleMode = true;
         this.currentQuestionIndex = 0;
         this.answers = {};
-        this.isCompleted = false;
+        this._isCompleted = false;
+        this.selectRandomQuestions(); // Select 5 random questions
         return this.getWelcomeMessage();
     }
 
@@ -160,8 +165,7 @@ Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
         return questionText;
     }
 
-    processAnswer(answer) {
-        if (!this.isOracleMode || this.isCompleted) {
+    processAnswer(answer) {        if (!this.isOracleMode || this._isCompleted) {
             return "Das Orakel ist nicht aktiv. Starte mit 'Orakel starten'!";
         }
 
@@ -185,11 +189,9 @@ Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
             type: question.type
         };
 
-        this.currentQuestionIndex++;
-
-        // Check if we're done
+        this.currentQuestionIndex++;        // Check if we're done
         if (this.currentQuestionIndex >= this.questions.length) {
-            this.isCompleted = true;
+            this._isCompleted = true;
             return this.generatePrediction();
         }
 
@@ -296,10 +298,12 @@ Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
         ];
 
         return recommendations.slice(0, 4).join("\n");
+    }    isInOracleMode() {
+        return this.isOracleMode;
     }
 
-    isInOracleMode() {
-        return this.isOracleMode;
+    get isCompleted() {
+        return this._isCompleted;
     }
 
     getProgress() {
@@ -308,13 +312,11 @@ Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
             total: this.questions.length,
             percentage: Math.round((this.currentQuestionIndex / this.questions.length) * 100)
         };
-    }
-
-    resetOracle() {
+    }    resetOracle() {
         this.currentQuestionIndex = 0;
         this.answers = {};
         this.isOracleMode = false;
-        this.isCompleted = false;
+        this._isCompleted = false;
     }
 }
 

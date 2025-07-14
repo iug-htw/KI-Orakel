@@ -10,7 +10,6 @@ const loadingSpinner = document.getElementById('loadingSpinner');
 
 // Buttons
 const sendChatBtn = document.getElementById('sendChat');
-const sendGenerateBtn = document.getElementById('sendGenerate');
 const clearChatBtn = document.getElementById('clearChat');
 const saveChatBtn = document.getElementById('saveChat');
 const loadChatBtn = document.getElementById('loadChat');
@@ -45,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function setupEventListeners() {
     sendChatBtn.addEventListener('click', () => sendMessage('chat'));
-    sendGenerateBtn.addEventListener('click', () => sendMessage('generate'));
     clearChatBtn.addEventListener('click', clearChat);
     saveChatBtn.addEventListener('click', exportChat);
     loadChatBtn.addEventListener('click', () => fileInput.click());
@@ -71,11 +69,9 @@ function setLoading(loading) {
     if (loading) {
         loadingSpinner.classList.add('active');
         sendChatBtn.disabled = true;
-        sendGenerateBtn.disabled = true;
     } else {
         loadingSpinner.classList.remove('active');
         sendChatBtn.disabled = false;
-        sendGenerateBtn.disabled = false;
     }
 }
 
@@ -115,20 +111,21 @@ function addMessage(content, sender = 'user') {
         timestampSpan.textContent = new Date(timestamp).toLocaleTimeString();
         messageDiv.appendChild(timestampSpan);
     }
-    
-    document.getElementById('chatHistory').appendChild(messageDiv);
+      document.getElementById('chatHistory').appendChild(messageDiv);
     document.getElementById('chatHistory').scrollTop = document.getElementById('chatHistory').scrollHeight;
     
-    // Auto-save to localStorage and file
+    // Auto-save to localStorage only (not to file during oracle session)
     storageManager.saveChatToStorage(chatHistory, currentSessionId);
     
-    // Auto-save to file every 2 messages or when assistant responds
-    if (sender === 'assistant' || chatHistory.length % 2 === 0) {
-        const statusCallback = {
-            getStatus: () => statusMessage.textContent,
-            setStatus: (msg) => statusMessage.textContent = msg
-        };
-        storageManager.autoSaveChatToFile(chatHistory, currentSessionId, statusCallback);
+    // Only auto-save to file if not in oracle mode or if oracle is completed
+    if (!kiOracle.isInOracleMode() || kiOracle.isCompleted) {
+        if (sender === 'assistant' || chatHistory.length % 2 === 0) {
+            const statusCallback = {
+                getStatus: () => statusMessage.textContent,
+                setStatus: (msg) => statusMessage.textContent = msg
+            };
+            storageManager.autoSaveChatToFile(chatHistory, currentSessionId, statusCallback);
+        }
     }
 }
 
@@ -155,17 +152,11 @@ async function sendMessage(type = 'chat') {
     // Add user message to chat
     addMessage(message, 'user');
     userInput.value = '';
-    
-    try {
+      try {
         setLoading(true);
         updateStatus(`Sende Anfrage an ${FIXED_MODEL}...`);
         
-        let response;
-        if (type === 'chat') {
-            response = await sendChatRequest(message, FIXED_MODEL);
-        } else {
-            response = await sendGenerateRequest(message, FIXED_MODEL);
-        }
+        const response = await sendChatRequest(message, FIXED_MODEL);
         
         updateStatus('Antwort erhalten');
         
@@ -203,32 +194,7 @@ async function sendChatRequest(message, model) {
     const data = await response.json();
     const assistantMessage = data.message?.content || 'Keine Antwort erhalten';
     addMessage(assistantMessage, 'assistant');
-    
-    return data;
-}
-
-async function sendGenerateRequest(message, model) {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            model: model,
-            prompt: message,
-            stream: false
-        }),
-    });
-    
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const generatedText = data.response || 'Keine Antwort erhalten';
-    addMessage(generatedText, 'assistant');
-    
-    return data;
+      return data;
 }
 
 function clearChat() {
@@ -399,10 +365,9 @@ function handleOracleResponse(answer) {
         if (startBtn) {
             startBtn.style.display = 'inline-block';
         }
+          updateStatus('KI-Orakel Sitzung abgeschlossen!');
         
-        updateStatus('KI-Orakel Sitzung abgeschlossen!');
-        
-        // Auto-save the oracle session
+        // Auto-save the oracle session - NOW is the right time to save
         const statusCallback = {
             getStatus: () => statusMessage.textContent,
             setStatus: (msg) => statusMessage.textContent = msg
