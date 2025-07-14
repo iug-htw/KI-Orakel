@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ollama Chat Interface</title>
+    <title>KI-Orakel für Karriereberatung</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Ollama Chat Interface</h1>
+    <div class="container">        <header>
+            <h1>🔮 KI-Orakel für Karriereberatung 🔮</h1>
             <div class="server-info">
-                <span>Server: https://f2ki-h100-1.f2.htw-berlin.de:11435</span>
+                <span>Powered by Ollama (llama3.1:8b)</span>
                 <button id="listModels" class="btn-secondary">Modelle laden</button>
             </div>
         </header>
+
+        <div class="oracle-info">
+            <div class="oracle-message">
+                <h3>🌟 Entdecke Deine Zukunft in der Techindustrie! 🌟</h3>
+                <p>Das mystische KI-Orakel wird Dir durch gezielte Fragen dabei helfen, Deine Karrieremöglichkeiten zu erkunden und eine optimistische Prognose für Deine berufliche Zukunft zu erstellen.</p>
+                <button id="startOracle" class="btn-oracle">🔮 Orakel starten</button>
+            </div>
+            <div id="oracleProgress" class="oracle-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <span id="progressText">0 von 17 Fragen</span>
+            </div>
+        </div>
 
         <div class="models-section">
             <h3>Verfügbare Modelle:</h3>
@@ -44,10 +57,9 @@
                     </select>
                 </div>
                 
-                <div class="input-group">
-                    <textarea id="userInput" placeholder="Geben Sie Ihre Frage hier ein..." rows="3"></textarea>
+                <div class="input-group">                    <textarea id="userInput" placeholder="Geben Sie Ihre Antwort hier ein..." rows="3"></textarea>
                     <div class="button-group">
-                        <button id="sendChat" class="btn-primary">Chat senden</button>
+                        <button id="sendChat" class="btn-primary">Antwort senden</button>
                         <button id="sendGenerate" class="btn-primary">Text vervollständigen</button>
                         <button id="clearChat" class="btn-secondary">Chat leeren</button>
                         <button id="saveChat" class="btn-secondary">Chat speichern</button>
@@ -61,9 +73,8 @@
         <div class="status-bar">
             <div id="statusMessage" class="status-message">Bereit</div>
             <div class="spinner" id="loadingSpinner"></div>
-        </div>    </div>
-
-    <script src="chatStorage.js"></script>
+        </div>    </div>    <script src="chatStorage.js"></script>
+    <script src="kiOracle.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

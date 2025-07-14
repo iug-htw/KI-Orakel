@@ -26,16 +26,28 @@ let currentSessionId = null;
 
 // Initialize storage manager
 let storageManager = null;
+let kiOracle = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize storage manager
+    // Initialize storage manager and KI Oracle
     storageManager = new ChatStorageManager();
+    kiOracle = new KIOracle();
     
     setupEventListeners();
     loadModels();
     loadChatFromStorage();
     currentSessionId = storageManager.generateSessionId();
+    
+    // Auto-select llama3.1:8b model for oracle
+    setTimeout(() => {
+        const llama31Option = Array.from(document.getElementById('modelSelect').options).find(
+            option => option.value.includes('llama3.1:8b')
+        );
+        if (llama31Option) {
+            document.getElementById('modelSelect').value = llama31Option.value;
+        }
+    }, 1000);
       // Setup auto-save toggle
     const autoSaveToggle = document.getElementById('autoSaveToggle');
     autoSaveToggle.addEventListener('change', function() {
@@ -52,6 +64,12 @@ function setupEventListeners() {
     saveChatBtn.addEventListener('click', exportChat);
     loadChatBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', importChat);
+    
+    // Oracle start button
+    const startOracleBtn = document.getElementById('startOracle');
+    if (startOracleBtn) {
+        startOracleBtn.addEventListener('click', startOracleSession);
+    }
     
     // Enter key to send message
     userInput.addEventListener('keydown', function(event) {
@@ -90,25 +108,32 @@ function addMessage(content, sender = 'user') {
         timestamp: timestamp,
         sessionId: currentSessionId
     };
-      // Add to chat history array
+    
+    // Add to chat history array
     chatHistory.push(messageData);
     
     if (sender === 'assistant') {
         // Format assistant messages with proper line breaks
         messageDiv.innerHTML = content.replace(/\n/g, '<br>');
+    } else if (sender === 'oracle' || sender === 'question' || sender === 'prediction') {
+        // Format oracle messages as HTML
+        messageDiv.innerHTML = content.replace(/\n/g, '<br>');
     } else {
         messageDiv.textContent = content;
     }
     
-    // Add timestamp to message
-    const timestampSpan = document.createElement('span');
-    timestampSpan.className = 'timestamp';
-    timestampSpan.textContent = new Date(timestamp).toLocaleTimeString();
-    messageDiv.appendChild(timestampSpan);
+    // Add timestamp to message (except for oracle messages)
+    if (sender !== 'oracle' && sender !== 'question' && sender !== 'prediction') {
+        const timestampSpan = document.createElement('span');
+        timestampSpan.className = 'timestamp';
+        timestampSpan.textContent = new Date(timestamp).toLocaleTimeString();
+        messageDiv.appendChild(timestampSpan);
+    }
     
     document.getElementById('chatHistory').appendChild(messageDiv);
     document.getElementById('chatHistory').scrollTop = document.getElementById('chatHistory').scrollHeight;
-      // Auto-save to localStorage and file
+    
+    // Auto-save to localStorage and file
     storageManager.saveChatToStorage(chatHistory, currentSessionId);
     
     // Auto-save to file every 2 messages or when assistant responds
@@ -197,6 +222,19 @@ function formatSize(bytes) {
 
 async function sendMessage(type = 'chat') {
     const message = userInput.value.trim();
+    
+    // Check if we're in oracle mode
+    if (kiOracle.isInOracleMode()) {
+        handleOracleResponse(message);
+        return;
+    }
+    
+    // Check for oracle start commands
+    if (message.toLowerCase().includes('orakel') || message.toLowerCase().includes('start')) {
+        startOracleSession();
+        return;
+    }
+    
     const selectedModel = modelSelect.value;
     
     if (!message) {
@@ -293,6 +331,22 @@ function clearChat() {
     chatHistory = [];
     currentSessionId = storageManager.generateSessionId();
     storageManager.saveChatToStorage(chatHistory, currentSessionId);
+    
+    // Reset oracle
+    kiOracle.resetOracle();
+    
+    // Hide progress bar
+    const progressDiv = document.getElementById('oracleProgress');
+    if (progressDiv) {
+        progressDiv.style.display = 'none';
+    }
+    
+    // Show start button
+    const startBtn = document.getElementById('startOracle');
+    if (startBtn) {
+        startBtn.style.display = 'inline-block';
+    }
+    
     // Save final state before clearing
     const statusCallback = {
         getStatus: () => statusMessage.textContent,
@@ -300,48 +354,6 @@ function clearChat() {
     };
     storageManager.autoSaveChatToFile(chatHistory, currentSessionId, statusCallback);
     updateStatus('Chat geleert');
-}
-
-function autoSaveChatToFile() {
-    if (!autoSaveEnabled || chatHistory.length === 0) {
-        return;
-    }
-    
-    saveCounter++;
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `chats/chat_${currentSessionId}_${timestamp}.json`;
-    
-    const exportData = {
-        autoSaved: true,
-        saveNumber: saveCounter,
-        saveDate: new Date().toISOString(),
-        sessionId: currentSessionId,
-        chatHistory: chatHistory,
-        totalMessages: chatHistory.length
-    };
-    
-    // Create and download JSON file
-    const jsonBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const jsonUrl = URL.createObjectURL(jsonBlob);
-    
-    const link = document.createElement('a');
-    link.href = jsonUrl;
-    link.download = filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Cleanup
-    URL.revokeObjectURL(jsonUrl);
-    
-    // Show subtle notification
-    const statusEl = document.getElementById('statusMessage');
-    const originalText = statusEl.textContent;
-    statusEl.textContent = `Auto-gespeichert (${saveCounter})`;
-    setTimeout(() => {
-        statusEl.textContent = originalText;
-    }, 2000);
 }
 
 function exportChat() {
@@ -398,20 +410,119 @@ function loadChatFromStorage() {
             
             if (message.sender === 'assistant') {
                 messageDiv.innerHTML = message.content.replace(/\n/g, '<br>');
+            } else if (message.sender === 'oracle' || message.sender === 'question' || message.sender === 'prediction') {
+                messageDiv.innerHTML = message.content.replace(/\n/g, '<br>');
             } else {
                 messageDiv.textContent = message.content;
             }
             
-            // Add timestamp
-            const timestampSpan = document.createElement('span');
-            timestampSpan.className = 'timestamp';
-            timestampSpan.textContent = new Date(message.timestamp).toLocaleTimeString();
-            messageDiv.appendChild(timestampSpan);
+            // Add timestamp (except for oracle messages)
+            if (message.sender !== 'oracle' && message.sender !== 'question' && message.sender !== 'prediction') {
+                const timestampSpan = document.createElement('span');
+                timestampSpan.className = 'timestamp';
+                timestampSpan.textContent = new Date(message.timestamp).toLocaleTimeString();
+                messageDiv.appendChild(timestampSpan);
+            }
             
             chatContainer.appendChild(messageDiv);
         });
         
         chatContainer.scrollTop = chatContainer.scrollHeight;
         updateStatus(`Chat geladen (${chatHistory.length} Nachrichten)`);
+    }
+}
+
+// Oracle-specific functions
+function startOracleSession() {
+    const welcomeMessage = kiOracle.startOracle();
+    addMessage(welcomeMessage, 'oracle');
+    
+    // Show progress bar
+    const progressDiv = document.getElementById('oracleProgress');
+    if (progressDiv) {
+        progressDiv.style.display = 'block';
+    }
+    
+    // Hide start button
+    const startBtn = document.getElementById('startOracle');
+    if (startBtn) {
+        startBtn.style.display = 'none';
+    }
+    
+    // Show first question
+    setTimeout(() => {
+        const firstQuestion = kiOracle.getCurrentQuestion();
+        addMessage(firstQuestion, 'question');
+        updateOracleProgress();
+    }, 1000);
+    
+    updateStatus('KI-Orakel gestartet - Beantworte die Fragen!');
+}
+
+function handleOracleResponse(answer) {
+    if (!answer.trim()) {
+        updateStatus('Bitte geben Sie eine Antwort ein');
+        return;
+    }
+    
+    // Add user's answer
+    addMessage(answer, 'user');
+    userInput.value = '';
+    
+    // Process the answer
+    const response = kiOracle.processAnswer(answer);
+    
+    // Check if it's a validation error
+    if (response.includes('Bitte wähle eine gültige Option')) {
+        addMessage(response, 'system');
+        return;
+    }
+    
+    // Check if oracle is completed
+    if (kiOracle.isCompleted || response.includes('KARRIEREPROGNOSE')) {
+        // This is the final prediction
+        addMessage(response, 'prediction');
+        
+        // Hide progress bar
+        const progressDiv = document.getElementById('oracleProgress');
+        if (progressDiv) {
+            progressDiv.style.display = 'none';
+        }
+        
+        // Show start button again
+        const startBtn = document.getElementById('startOracle');
+        if (startBtn) {
+            startBtn.style.display = 'inline-block';
+        }
+        
+        updateStatus('KI-Orakel Sitzung abgeschlossen!');
+        
+        // Auto-save the oracle session
+        const statusCallback = {
+            getStatus: () => statusMessage.textContent,
+            setStatus: (msg) => statusMessage.textContent = msg
+        };
+        storageManager.autoSaveChatToFile(chatHistory, currentSessionId, statusCallback);
+        
+    } else {
+        // Show next question
+        setTimeout(() => {
+            addMessage(response, 'question');
+            updateOracleProgress();
+        }, 500);
+    }
+}
+
+function updateOracleProgress() {
+    const progress = kiOracle.getProgress();
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    if (progressFill) {
+        progressFill.style.width = progress.percentage + '%';
+    }
+    
+    if (progressText) {
+        progressText.textContent = `${progress.current} von ${progress.total} Fragen`;
     }
 }
