@@ -45,7 +45,7 @@ class KIOracle {
                 placeholder: "Beschreibe Deine Erwartungen..."
             },            {
                 id: 8,
-                text: "Inwiefern wurden Deine Erwartungen erfüllt?",
+                text: "Inwiefern wurden Deine Erwartungen an den Informatikunterricht erfüllt?",
                 type: "text",
                 placeholder: "Beschreibe, ob und wie Deine Erwartungen erfüllt wurden..."
             },
@@ -57,7 +57,7 @@ class KIOracle {
             },
             {
                 id: 10,
-                text: "Welche Aufgaben machen Dir keinen Spaß?",
+                text: "Welche Aufgaben im Informatikunterricht machen Dir keinen Spaß?",
                 type: "text",
                 placeholder: "Beschreibe Aufgaben, die Dir weniger gefallen..."
             },
@@ -74,12 +74,12 @@ class KIOracle {
             },
             {
                 id: 14,
-                text: "Gab es Unterschiede zwischen Jungs und Mädchen in der Zusammenarbeit?",
+                text: "In Informatik arbeitet man häufig in Gruppen. Gab es Unterschiede zwischen Jungs und Mädchen in der Zusammenarbeit?",
                 type: "text",
                 placeholder: "Teile Deine Beobachtungen..."
             },            {
                 id: 15,
-                text: "Wie war die Zusammenarbeit mit den Jungs?",
+                text: "In Informatik arbeitet man häufig in Gruppen. Wie war die Zusammenarbeit mit den Jungs?",
                 type: "text",
                 placeholder: "Beschreibe Deine Erfahrungen bei der Zusammenarbeit mit den Jungs..."
             },
@@ -125,9 +125,7 @@ Ich bin das mystische KI-Orakel und werde Dir dabei helfen, Deine Zukunft in der
 ✨ Basierend auf Deinen Antworten erstelle ich eine optimistische Karriereprognose
 ✨ Du wirst überrascht sein, welche großartigen Möglichkeiten auf Dich warten!
 
-**Bist Du bereit, Deine technische Zukunft zu entdecken?**
-
-Antworte einfach mit "Ja" oder "Start", um zu beginnen! 🚀`;
+**Bist Du bereit, Deine technische Zukunft zu entdecken?**`;
     }    getCurrentQuestion() {
         if (this.currentQuestionIndex >= this.questions.length) {
             return this.generatePrediction();
