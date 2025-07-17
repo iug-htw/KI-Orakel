@@ -19,15 +19,6 @@
                 </div>
                 <span id="progressText">0 von 5 Fragen</span>
             </div>
-        </div>        <div class="settings-section">
-            <h3>Einstellungen:</h3>
-            <div class="setting-item">
-                <label>
-                    <input type="checkbox" id="autoSaveToggle" checked>
-                    Automatische Speicherung aktiviert
-                </label>
-                <span class="setting-description">Chats werden automatisch im Download-Ordner gespeichert</span>
-            </div>
         </div>
 
         <div class="chat-container">
@@ -35,19 +26,12 @@
               <div class="input-section">
                 <div class="input-group">                    <textarea id="userInput" placeholder="Geben Sie Ihre Antwort hier ein..." rows="3"></textarea>                    <div class="button-group">
                         <button id="sendChat" class="btn-primary">Antwort senden</button>
-                        <button id="clearChat" class="btn-secondary">Chat leeren</button>
-                        <button id="saveChat" class="btn-secondary">Chat speichern</button>
-                        <button id="loadChat" class="btn-secondary">Chat laden</button>
                     </div>
-                    <input type="file" id="fileInput" accept=".json,.txt" style="display: none;">
                 </div>
             </div>
         </div>
-
-        <div class="status-bar">
-            <div id="statusMessage" class="status-message">Bereit</div>
-            <div class="spinner" id="loadingSpinner"></div>
-        </div>    </div>    <script src="chatStorage.js"></script>
+    </div>
+    <script src="chatStorage.js"></script>
     <script src="kiOracle.js"></script>
     <script src="script.js"></script>
 </body>
