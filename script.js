@@ -338,7 +338,7 @@ function startOracleSession() {
     updateStatus('KI-Orakel gestartet - Beantworte die Fragen!');
 }
 
-function handleOracleResponse(answer) {
+async function handleOracleResponse(answer) {
     if (!answer.trim()) {
         updateStatus('Bitte geben Sie eine Antwort ein');
         return;
@@ -347,46 +347,60 @@ function handleOracleResponse(answer) {
     // Add user's answer
     addMessage(answer, 'user');
     userInput.value = '';
-      // Process the answer
-    const response = kiOracle.processAnswer(answer);
     
-    // Check if it's a validation error
-    if (response.includes('Bitte gib eine Antwort ein')) {
-        addMessage(response, 'system');
-        return;
-    }
-    
-    // Check if oracle is completed
-    if (kiOracle.isCompleted || response.includes('KARRIEREPROGNOSE')) {
-        // This is the final prediction
-        addMessage(response, 'prediction');
+    try {
+        // Process the answer (this might be async now)
+        const response = await kiOracle.processAnswer(answer);
         
-        // Hide progress bar
-        const progressDiv = document.getElementById('oracleProgress');
-        if (progressDiv) {
-            progressDiv.style.display = 'none';
+        // Check if it's a validation error
+        if (response.includes('Bitte gib eine Antwort ein')) {
+            addMessage(response, 'system');
+            return;
         }
         
-        // Show start button again
-        const startBtn = document.getElementById('startOracle');
-        if (startBtn) {
-            startBtn.style.display = 'inline-block';
+        // Check if oracle is completed
+        if (kiOracle.isCompleted || response.includes('KARRIEREPROGNOSE')) {
+            // Show loading indicator for prediction generation
+            setLoading(true);
+            updateStatus('Das Orakel erstellt Deine personalisierte Karriereprognose...');
+            
+            // This is the final prediction
+            addMessage(response, 'prediction');
+            
+            // Hide progress bar
+            const progressDiv = document.getElementById('oracleProgress');
+            if (progressDiv) {
+                progressDiv.style.display = 'none';
+            }
+            
+            // Show start button again
+            const startBtn = document.getElementById('startOracle');
+            if (startBtn) {
+                startBtn.style.display = 'inline-block';
+            }
+            
+            updateStatus('KI-Orakel Sitzung abgeschlossen!');
+            
+            // Auto-save the oracle session - NOW is the right time to save
+            const statusCallback = {
+                getStatus: () => statusMessage.textContent,
+                setStatus: (msg) => statusMessage.textContent = msg
+            };
+            storageManager.autoSaveChatToFile(chatHistory, currentSessionId, statusCallback);
+            
+        } else {
+            // Show next question
+            setTimeout(() => {
+                addMessage(response, 'question');
+                updateOracleProgress();
+            }, 500);
         }
-          updateStatus('KI-Orakel Sitzung abgeschlossen!');
-        
-        // Auto-save the oracle session - NOW is the right time to save
-        const statusCallback = {
-            getStatus: () => statusMessage.textContent,
-            setStatus: (msg) => statusMessage.textContent = msg
-        };
-        storageManager.autoSaveChatToFile(chatHistory, currentSessionId, statusCallback);
-        
-    } else {
-        // Show next question
-        setTimeout(() => {
-            addMessage(response, 'question');
-            updateOracleProgress();
-        }, 500);
+    } catch (error) {
+        console.error('Error processing oracle response:', error);
+        addMessage('Entschuldigung, es gab einen Fehler beim Verarbeiten Deiner Antwort. Bitte versuche es erneut.', 'system');
+        updateStatus('Fehler beim Verarbeiten der Antwort');
+    } finally {
+        setLoading(false);
     }
 }
 

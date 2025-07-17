@@ -137,7 +137,10 @@ Ich bin das mystische KI-Orakel und werde Dir dabei helfen, Deine Zukunft in der
         questionText += question.placeholder;
         
         return questionText;
-    }processAnswer(answer) {        if (!this.isOracleMode || this._isCompleted) {
+    }
+
+    async processAnswer(answer) {
+        if (!this.isOracleMode || this._isCompleted) {
             return "Das Orakel ist nicht aktiv. Starte mit 'Orakel starten'!";
         }
 
@@ -156,27 +159,104 @@ Ich bin das mystische KI-Orakel und werde Dir dabei helfen, Deine Zukunft in der
             type: question.type
         };
 
-        this.currentQuestionIndex++;        // Check if we're done
+        this.currentQuestionIndex++;
+
+        // Check if we're done
         if (this.currentQuestionIndex >= this.questions.length) {
             this._isCompleted = true;
-            return this.generatePrediction();
+            return await this.generatePrediction();
         }
 
         // Return next question
         return this.getCurrentQuestion();
     }
 
-    generatePrediction() {
-        const prediction = this.createOptimisticPrediction();
+    async generatePrediction() {
+        const prediction = await this.createOptimisticPrediction();
         this.isOracleMode = false;
         return prediction;
-    }    createOptimisticPrediction() {
+    }    async createOptimisticPrediction() {
+        // Prepare the prompt for the Ollama API
+        const answers = Object.values(this.answers);
+        const prompt = this.buildPredictionPrompt(answers);
+        
+        try {
+            // Call Ollama API to generate the prediction
+            const prediction = await this.callOllamaForPrediction(prompt);
+            return prediction;
+        } catch (error) {
+            console.error('Error generating prediction with Ollama:', error);
+            // Fallback to local prediction if API fails
+            return this.createFallbackPrediction(answers);
+        }
+    }
+
+    buildPredictionPrompt(answers) {
+        let prompt = `Du bist ein KI-Orakel für Karriereberatung in der Techindustrie. Erstelle eine optimistische, personalisierte Karriereprognose basierend auf den folgenden Antworten einer Schülerin:\n\n`;
+        
+        answers.forEach((answer, index) => {
+            prompt += `Frage ${index + 1}: "${answer.question}"\n`;
+            prompt += `Antwort: "${answer.answer}"\n\n`;
+        });
+        
+        prompt += `Erstelle eine magische Karriereprognose mit folgender Struktur:
+🌟 **DEINE MAGISCHE KARRIEREPROGNOSE** 🌟
+
+Das KI-Orakel hat gesprochen und Deine Zukunft in der Techindustrie vorausgesagt!
+
+🎯 **DEIN OPTIMALER KARRIEREWEG:**
+[Wähle basierend auf den Antworten einen passenden Karriereweg wie Software-Entwicklerin, UX/UI-Designerin, Data Scientist, Cybersecurity-Expertin, Projektmanagerin, oder KI-Entwicklerin und begründe die Wahl kurz]
+
+💫 **DEINE BESONDEREN STÄRKEN:**
+[Liste 4 Stärken basierend auf den Antworten auf, verwende Emojis wie 🔥 💪 🎨 🤝 🧠 🎯]
+
+🚀 **DEINE ZUKUNFTSAUSSICHTEN:**
+[3 optimistische Vorhersagen für die nächsten 5 Jahre, verwende Emojis wie 📈 🏆 💰 🌍 👥 �]
+
+�💡 **EMPFOHLENE NÄCHSTE SCHRITTE:**
+[4 konkrete, personalisierte Empfehlungen basierend auf den Antworten, verwende Emojis wie 🎓 🔗 🎨 📖 💡 �]
+
+�🌈 **ABSCHLIESSENDE WEISHEIT:**
+Die Sterne stehen günstig für Dich! Du hast das Zeug zu einer erfolgreichen Karriere in der Techindustrie. Vertraue auf Deine Fähigkeiten und wage große Schritte - die Zukunft gehört Dir! ✨
+
+Wichtig: Sei sehr optimistisch und ermutigend. Verwende die gegebenen Antworten, um die Vorhersage zu personalisieren. Schreibe auf Deutsch und verwende die Du-Form.`;
+        
+        return prompt;
+    }
+
+    async callOllamaForPrediction(prompt) {
+        const OLLAMA_BASE_URL = 'https://f2ki-h100-1.f2.htw-berlin.de:11435';
+        const FIXED_MODEL = 'llama3.1:8b';
+        
+        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: FIXED_MODEL,
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                stream: false
+            }),
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.message?.content || 'Keine Antwort erhalten';
+    }
+
+    createFallbackPrediction(answers) {
         let prediction = `🌟 **DEINE MAGISCHE KARRIEREPROGNOSE** 🌟\n\n`;
         prediction += `Das KI-Orakel hat gesprochen und Deine Zukunft in der Techindustrie vorausgesagt!\n\n`;
 
-        // Analyze answers for personalized prediction
-        const answers = Object.values(this.answers);
-        
         // Generate personalized career path based on actual answers
         let careerPath = this.determineCareerPathFromAnswers(answers);
         
@@ -196,7 +276,9 @@ Ich bin das mystische KI-Orakel und werde Dir dabei helfen, Deine Zukunft in der
         prediction += `Die Sterne stehen günstig für Dich! Du hast das Zeug zu einer erfolgreichen Karriere in der Techindustrie. Vertraue auf Deine Fähigkeiten und wage große Schritte - die Zukunft gehört Dir! ✨`;
 
         return prediction;
-    }    determineCareerPathFromAnswers(answers) {
+    }
+
+    determineCareerPathFromAnswers(answers) {
         // Analyze answers for career path determination
         const allAnswers = answers.map(a => a.answer.toLowerCase()).join(' ');
         
